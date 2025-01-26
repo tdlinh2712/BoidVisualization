@@ -146,6 +146,59 @@ button:hover {
     max-width: fit-content;
 }
 
+/* Style for the slider container */
+.slider-container {
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-around; /* Space sliders evenly */
+    align-items: center; /* Center items vertically */
+    margin: 20px; /* Margin around the container */
+}
+
+/* Style for the slider divs */
+.slider-div {
+    display: flex;
+    flex-direction: column; /* Stack label and slider vertically */
+    align-items: center; /* Center items horizontally */
+}
+
+/* Style for the slider input */
+.slider {
+    -webkit-appearance: none; /* Remove default styling */
+    width: 100%; /* Full width */
+    height: 8px; /* Height of the slider track */
+    background: #ccc; /* Background color of the track */
+    border-radius: 5px; /* Rounded corners */
+    outline: none; /* Remove outline */
+}
+
+/* Style for the slider thumb */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Remove default styling */
+    appearance: none; /* Remove default styling */
+    width: 16px; /* Width of the thumb */
+    height: 16px; /* Height of the thumb */
+    border-radius: 50%; /* Make it circular */
+    background: #007bff; /* Color of the thumb */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Style for the slider thumb for Firefox */
+.slider::-moz-range-thumb {
+    width: 16px; /* Width of the thumb */
+    height: 16px; /* Height of the thumb */
+    border-radius: 50%; /* Make it circular */
+    background: #007bff; /* Color of the thumb */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Style for the slider thumb when hovered */
+.slider:hover::-webkit-slider-thumb {
+    background: #0056b3; /* Darker color on hover */
+}
+
+.slider:hover::-moz-range-thumb {
+    background: #0056b3; /* Darker color on hover */
+}
 
 @media (max-width: 875px) {
 

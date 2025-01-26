@@ -6,12 +6,26 @@
   <title>WS playground</title>
   <link rel="stylesheet" href="/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script type="module" src="/src/main.ts"></script>
 </head>
 <body>
 <header class="logo">
 </header>
 <main id="app">
+  <div id="control-group" class="slider-container">
+    <div class="slider-div">
+      <p>Alignment</p>
+      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="alignment">
+    </div>
+    <div class="slider-div">
+      <p>Cohesion</p>
+      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="cohesion">
+    </div>
+    <div class="slider-div">
+      <p>Separation</p>
+      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="separation">
+    </div>
+  </div>
 </main>
-<script type="module" src="/src/main.ts"></script>
 </body>
 </html>

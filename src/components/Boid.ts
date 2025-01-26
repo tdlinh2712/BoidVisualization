@@ -1,10 +1,6 @@
 import p5 from 'p5';
+import { Color, FlockingWeights } from './types.ts'
 
-interface Color {
-    r: number;
-    g: number;
-    b: number;
-};
 
 class Boid {
     position: p5.Vector;
@@ -12,6 +8,7 @@ class Boid {
     acceleration: p5.Vector;
     maxSpeed!: number;
     maxDistance!: number;
+    maxEdgeDistance!: number;
     maxForce!: number;
     p: p5;
     color: Color;
@@ -31,20 +28,22 @@ class Boid {
     set_params()
     {
         this.maxSpeed = 4;
-        this.maxDistance = 50;
-        this.maxForce = 0.5;
+        this.maxDistance = 200;
+        this.maxEdgeDistance = 20;
+        this.maxForce = 1;
     }
     checkbound() {
         if (this.position.x < 0) {
-            this.position.x = this.p.width;
-        }
-        else if (this.position.x > this.p.width) {
             this.position.x = 0;
         }
+        else if (this.position.x > this.p.width) {
+            this.position.x = this.p.width;
+        }
         if (this.position.y < 0) {
-            this.position.y = this.p.height;
-        } else if (this.position.y > this.p.height) {
             this.position.y = 0;
+        }
+        else if (this.position.y > this.p.height) {
+            this.position.y = this.p.height;
         }
     }
 
@@ -102,7 +101,7 @@ class Boid {
         for (const boid of neighbors)
         {
             const distance = p5.Vector.dist(this.position, boid.position);
-            if (boid !== this && distance <= this.maxDistance)
+            if (distance !== 0 && distance <= this.maxDistance)
             {
                 // make a vector that's pointing to the other direction and divid by distance 
                 // so that bigger distance -> smaller vector
@@ -123,14 +122,69 @@ class Boid {
         return avg;
     }
 
-    flock(neighbors : Boid[])
+    avoid_edges() {
+        const avg = this.p.createVector();
+        let count = 0;
+        const position : p5.Vector = this.position;
+        if (position.x <= this.maxEdgeDistance)
+        {
+            // separate from (0, y)
+            const distance = position.x;
+            const diff = p5.Vector.sub(this.position, this.p.createVector(0, position.y));
+            diff.mult(this.maxEdgeDistance - distance);
+            avg.add(diff);
+            count++;
+        }
+        if (position.y <= this.maxEdgeDistance)
+        {
+            // separate from (x, 0)
+            const distance = position.y;
+            const diff = p5.Vector.sub(this.position, this.p.createVector(this.position.x, 0));
+            diff.mult(this.maxEdgeDistance - distance);
+            avg.add(diff);
+            count++;
+        }
+
+        if ((this.p.width - position.x) <= this.maxEdgeDistance)
+        {
+            // separate from (width, y)
+            const distance = this.p.width - position.x;
+            const diff = p5.Vector.sub(this.position, this.p.createVector(this.p.width, position.y));
+            diff.mult(this.maxEdgeDistance - distance);
+            avg.add(diff);
+            count++;
+        }
+        if ((this.p.height - position.y) <= this.maxEdgeDistance)
+        {
+            // separate from (x, height)
+            const distance = this.p.height - position.y;
+            const diff = p5.Vector.sub(this.position, this.p.createVector(this.position.x, this.p.height));
+            diff.mult(this.maxEdgeDistance - distance);
+            avg.add(diff);
+            count++;
+        }
+        if (count > 0)
+        {
+            // get avg location
+            avg.div(count); 
+            avg.setMag(this.maxSpeed);
+            avg.sub(this.velocity);
+            avg.limit(this.maxForce);
+        }
+        return avg;
+    }
+
+    flock(neighbors : Boid[], weight: FlockingWeights)
     {
-        const alignment = this.alignment(neighbors);
-        const cohesion = this.cohesion(neighbors);
-        const separation = this.separation(neighbors);
+        
+        const alignment = weight.alignment ? this.alignment(neighbors).mult(weight.alignment) : this.p.createVector();
+        const cohesion =  weight.alignment ? this.cohesion(neighbors).mult(weight.cohesion) : this.p.createVector();
+        const separation = weight.separation ? this.separation(neighbors).mult(weight.separation) : this.p.createVector();
+        const edge_avoidance = this.avoid_edges();
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
         this.acceleration.add(separation);
+        this.acceleration.add(edge_avoidance);
     }
 
     update() {
