@@ -34,16 +34,16 @@ class Boid {
     }
     checkbound() {
         if (this.position.x < 0) {
-            this.position.x = 0;
-        }
-        else if (this.position.x > this.p.width) {
             this.position.x = this.p.width;
         }
+        else if (this.position.x > this.p.width) {
+            this.position.x = 0;
+        }
         if (this.position.y < 0) {
-            this.position.y = 0;
+            this.position.y = this.p.height;
         }
         else if (this.position.y > this.p.height) {
-            this.position.y = this.p.height;
+            this.position.y = 0;
         }
     }
 
@@ -103,7 +103,7 @@ class Boid {
             const distance = p5.Vector.dist(this.position, boid.position);
             if (distance !== 0 && distance <= this.maxDistance)
             {
-                // make a vector that's pointing to the other direction and divid by distance 
+                // make a ve\ctor that's pointing to the other direction and divid by distance 
                 // so that bigger distance -> smaller vector
                 const diff = p5.Vector.sub(this.position, boid.position);
                 diff.div(distance);
@@ -180,11 +180,11 @@ class Boid {
         const alignment = weight.alignment ? this.alignment(neighbors).mult(weight.alignment) : this.p.createVector();
         const cohesion =  weight.alignment ? this.cohesion(neighbors).mult(weight.cohesion) : this.p.createVector();
         const separation = weight.separation ? this.separation(neighbors).mult(weight.separation) : this.p.createVector();
-        const edge_avoidance = this.avoid_edges();
+        // const edge_avoidance = this.avoid_edges();
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
         this.acceleration.add(separation);
-        this.acceleration.add(edge_avoidance);
+        // this.acceleration.add(edge_avoidance);
     }
 
     update() {
@@ -195,31 +195,31 @@ class Boid {
     }
 
     display(p: p5) {
-        // p.strokeWeight(10);
-        // p.stroke(255, 255, 128); // yellow
+        p.strokeWeight(5);
+        p.stroke(255, 255, 128); // yellow
 
-        // p.point(this.position.x, this.position.y);
+        p.point(this.position.x, this.position.y);
 
         // draw the boid
         
-        const angle = this.velocity.heading(); // Get the angle of the boid's velocity
+        // const angle = this.velocity.heading(); // Get the angle of the boid's velocity
 
-        // Draw the body as an ellipse
-        const bodyWidth = 12; // Width of the body
-        const bodyHeight = 6; // Height of the body
-        p.fill(this.color.r, this.color.g, this.color.b); 
-        p.ellipse(this.position.x, this.position.y, bodyWidth, bodyHeight);
-        // Draw the tail as a triangle
-        const tailLength = 10; // Length of the tail
-        const x1 = this.position.x - tailLength * Math.cos(angle);
-        const y1 = this.position.y - tailLength * Math.sin(angle);
-        const x2 = this.position.x + bodyWidth / 2 * Math.cos(angle + Math.PI / 6);
-        const y2 = this.position.y + bodyWidth / 2 * Math.sin(angle + Math.PI / 6);
-        const x3 = this.position.x + bodyWidth / 2 * Math.cos(angle - Math.PI / 6);
-        const y3 = this.position.y + bodyWidth / 2 * Math.sin(angle - Math.PI / 6);
+        // // Draw the body as an ellipse
+        // const bodyWidth = 12; // Width of the body
+        // const bodyHeight = 6; // Height of the body
+        // p.fill(this.color.r, this.color.g, this.color.b); 
+        // p.ellipse(this.position.x, this.position.y, bodyWidth, bodyHeight);
+        // // Draw the tail as a triangle
+        // const tailLength = 10; // Length of the tail
+        // const x1 = this.position.x - tailLength * Math.cos(angle);
+        // const y1 = this.position.y - tailLength * Math.sin(angle);
+        // const x2 = this.position.x + bodyWidth / 2 * Math.cos(angle + Math.PI / 6);
+        // const y2 = this.position.y + bodyWidth / 2 * Math.sin(angle + Math.PI / 6);
+        // const x3 = this.position.x + bodyWidth / 2 * Math.cos(angle - Math.PI / 6);
+        // const y3 = this.position.y + bodyWidth / 2 * Math.sin(angle - Math.PI / 6);
 
         // Draw the tail triangle
-        p.triangle(x1, y1, x2, y2, x3, y3);
+        // p.triangle(x1, y1, x2, y2, x3, y3);
     }
 }
 

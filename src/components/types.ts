@@ -9,3 +9,7 @@ export interface FlockingWeights {
     cohesion: number;
     separation: number;
 }
+export enum MODE {
+    CPP_BOIDS = "WebAssembly",
+    JS_BOIDS = "JavaScript"
+}
