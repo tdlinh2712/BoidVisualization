@@ -21,7 +21,7 @@ public:
     void update();
 
     // Apply flocking behavior based on neighbors
-    void flock(const std::vector<Boid>& neighbors, const float alignmentWeight, const float cohesionWeight, const float separationWeight);
+    void flock(const std::vector<Boid*>& neighbors, const float alignmentWeight, const float cohesionWeight, const float separationWeight);
 
     // Check and correct the boid's position if it goes out of bounds
     void checkBounds();
@@ -31,7 +31,8 @@ public:
     float getY() const { return position.y; }
     float getVelocityX() const { return velocity.x; }
     float getVelocityY() const { return velocity.y; }
-
+    float getMaxDistance() { return maxDistance; }
+    Vector2D& getPosition() { return position; }
 private:
     // Boid properties
     Vector2D position;       // Position (x, y)
@@ -49,9 +50,9 @@ private:
 
     // Private methods for flocking behavior
     void setParams();        // Set parameters for the boid
-    Vector2D alignment(const std::vector<Boid>& neighbors); // Calculate alignment vector
-    Vector2D cohesion(const std::vector<Boid>& neighbors);  // Calculate cohesion vector
-    Vector2D separation(const std::vector<Boid>& neighbors); // Calculate separation vector
+    Vector2D alignment(const std::vector<Boid*>& neighbors); // Calculate alignment vector
+    Vector2D cohesion(const std::vector<Boid*>& neighbors);  // Calculate cohesion vector
+    Vector2D separation(const std::vector<Boid*>& neighbors); // Calculate separation vector
     Vector2D avoidEdges();          // Calculate edge avoidance vector
     Vector2D limitForce(Vector2D& force);
 };

@@ -194,32 +194,34 @@ class Boid {
         this.acceleration.mult(0);
     }
 
-    display(p: p5) {
-        p.strokeWeight(5);
-        p.stroke(255, 255, 128); // yellow
+    display(color : p5.Color, p: p5) {
+        // p.strokeWeight(5);
+        // p.stroke(255, 255, 128); // yellow
 
-        p.point(this.position.x, this.position.y);
+        // p.point(this.position.x, this.position.y);
 
         // draw the boid
         
-        // const angle = this.velocity.heading(); // Get the angle of the boid's velocity
+        const angle = this.velocity.heading(); // Get the angle of the boid's velocity
 
-        // // Draw the body as an ellipse
-        // const bodyWidth = 12; // Width of the body
-        // const bodyHeight = 6; // Height of the body
-        // p.fill(this.color.r, this.color.g, this.color.b); 
-        // p.ellipse(this.position.x, this.position.y, bodyWidth, bodyHeight);
-        // // Draw the tail as a triangle
-        // const tailLength = 10; // Length of the tail
-        // const x1 = this.position.x - tailLength * Math.cos(angle);
-        // const y1 = this.position.y - tailLength * Math.sin(angle);
-        // const x2 = this.position.x + bodyWidth / 2 * Math.cos(angle + Math.PI / 6);
-        // const y2 = this.position.y + bodyWidth / 2 * Math.sin(angle + Math.PI / 6);
-        // const x3 = this.position.x + bodyWidth / 2 * Math.cos(angle - Math.PI / 6);
-        // const y3 = this.position.y + bodyWidth / 2 * Math.sin(angle - Math.PI / 6);
-
-        // Draw the tail triangle
-        // p.triangle(x1, y1, x2, y2, x3, y3);
+        // Draw the body as an ellipse
+        const bodyWidth = 5; // Width of the body
+        const bodyHeight = 6; // Height of the body
+        console.log(this.color)
+        p.stroke(this.color.r, this.color.g, this.color.b); 
+        p.strokeWeight(2);
+        p.ellipse(this.position.x, this.position.y, bodyWidth, bodyHeight);
+        
+        // Draw the tail as a line instead of a triangle
+        const tailLength = 10; // Length of the tail
+        const x1 = this.position.x - tailLength * Math.cos(angle);
+        const y1 = this.position.y - tailLength * Math.sin(angle);
+        
+        // Set the stroke color with fading effect
+        p.strokeWeight(5)
+        p.stroke(this.color.r, this.color.g, this.color.b, 150); // Set stroke with alpha
+        // Draw the tail line
+        p.line(this.position.x, this.position.y, x1, y1);
     }
 }
 

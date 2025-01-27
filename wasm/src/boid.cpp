@@ -24,8 +24,7 @@ void Boid::update() {
     acceleration = Vector2D(0, 0); // Reset acceleration
 }
 
-void Boid::flock(const std::vector<Boid>& neighbors, const float alignmentWeight, const float cohesionWeight, const float separationWeight) {
-    Vector2D separationVec = separation(neighbors);
+void Boid::flock(const std::vector<Boid*>& neighbors, const float alignmentWeight, const float cohesionWeight, const float separationWeight) {
     // Vector2D edgeAvoidanceVec = avoidEdges(800, 600); // Assuming canvas size
     if (alignmentWeight >= MIN_APPLIED_WEIGHT)
     {
@@ -39,7 +38,7 @@ void Boid::flock(const std::vector<Boid>& neighbors, const float alignmentWeight
     }
     if (separationWeight >= MIN_APPLIED_WEIGHT)
     {
-        acceleration =  Vector2D(0, 0);
+        Vector2D separationVec = separation(neighbors);
         acceleration = acceleration + separationVec * separationWeight;
     }
 }
@@ -51,19 +50,19 @@ void Boid::checkBounds() {
     else if (position.y > height) position.y = 0;
 }
 
-Vector2D Boid::alignment(const std::vector<Boid>& neighbors) {
+Vector2D Boid::alignment(const std::vector<Boid*>& neighbors) {
     Vector2D avg(0, 0);
     int count = 0;
 
-    for (const Boid& boid : neighbors) {
-        if (&boid == this)
+    for (const Boid* boid : neighbors) {
+        if (boid == this)
         {
             continue;
         }
         
-        float distance = (position - boid.position).magnitude();
+        float distance = (position - boid->position).magnitude();
         if (distance <= maxDistance) {
-            avg = avg + boid.velocity;
+            avg = avg + boid->velocity;
             count++;
         }
     }
@@ -77,18 +76,18 @@ Vector2D Boid::alignment(const std::vector<Boid>& neighbors) {
     return avg;
 }
 
-Vector2D Boid::cohesion(const std::vector<Boid>& neighbors) {
+Vector2D Boid::cohesion(const std::vector<Boid*>& neighbors) {
     Vector2D avg(0, 0);
     int count = 0;
 
-    for (const Boid& boid : neighbors) {
-        if (&boid == this)
+    for (const Boid* boid : neighbors) {
+        if (boid == this)
         {
             continue;
         }
-        float distance = (position - boid.position).magnitude();
+        float distance = (position - boid->position).magnitude();
         if (distance <= maxDistance) {
-            avg = avg + boid.position;
+            avg = avg + boid->position;
             count++;
         }
     }
@@ -102,18 +101,18 @@ Vector2D Boid::cohesion(const std::vector<Boid>& neighbors) {
     return avg;
 }
 
-Vector2D Boid::separation(const std::vector<Boid>& neighbors) {
+Vector2D Boid::separation(const std::vector<Boid*>& neighbors) {
     Vector2D avg(0, 0);
     int count = 0;
 
-    for (const Boid& boid : neighbors) {
-        if (&boid == this)
+    for (const auto* boid : neighbors) {
+        if (boid == this)
         {
             continue;
         }
-        float distance = (position - boid.position).magnitude();
+        float distance = (position - boid->position).magnitude();
         if (distance > 0 && distance <= maxDistance) {
-            Vector2D diff = position - boid.position;
+            Vector2D diff = position - boid->position;
             diff = diff / distance;
             avg = avg + diff;
             count++;

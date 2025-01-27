@@ -1,3 +1,5 @@
+import Boid from "./Boid";
+
 export interface Color {
     r: number;
     g: number;
@@ -12,4 +14,10 @@ export interface FlockingWeights {
 export enum MODE {
     CPP_BOIDS = "WebAssembly",
     JS_BOIDS = "JavaScript"
+}
+
+export interface Point {
+    x: number,
+    y : number,
+    userData : Boid
 }

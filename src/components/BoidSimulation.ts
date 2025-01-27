@@ -1,4 +1,5 @@
 import { FlockingWeights } from "./types";
+import { WASMFunctions } from '../wasmTypes.ts';
 
 export class BoidSimulation {
     private positions: Float32Array;
@@ -9,8 +10,8 @@ export class BoidSimulation {
     private accelerationPtr: number;
     private module: any;
     private numBoids: number;
-
-    constructor(numBoids: number, module: any, init_boids: Function) {
+    private colors: Color[] = [];
+    constructor(numBoids: number, module: any, init_boids: Function, width: number, height: number) {
         this.numBoids = numBoids;
         this.module = module;
         
@@ -24,11 +25,20 @@ export class BoidSimulation {
         this.velocityPtr = module._malloc(this.velocities.length * this.velocities.BYTES_PER_ELEMENT);
         this.accelerationPtr = module._malloc(this.accelerations.length * this.accelerations.BYTES_PER_ELEMENT);
 
+        // initialize colors
+        for (let i = 0; i < numBoids; i++)
+        {
+            this.colors[i] = {
+                r: Math.random() * 255,
+                g: Math.random() * 255,
+                b: Math.random() * 255,
+            };
+        }
         // Initialize memory
         this.initializeMemory();
         
         // Initialize boids
-        init_boids(numBoids, 500, 500, this.positionPtr);
+        init_boids(numBoids, width, height, this.positionPtr);
         this.updatePositionsFromWasm();
     }
 
@@ -49,8 +59,9 @@ export class BoidSimulation {
 
     public simulate(simulateFunc: Function, weight : FlockingWeights) {
         const { alignment, cohesion, separation } = weight;
-        simulateFunc(this.numBoids, this.positionPtr, alignment, cohesion, separation );
-        this.updatePositionsFromWasm();
+        simulateFunc(this.numBoids, alignment, cohesion, separation, this.positionPtr, this.velocityPtr );
+        // not calling this so we save the memory coping from CPP to JS
+        // this.updatePositionsFromWasm();
     }
 
     public getPositions() {
@@ -60,7 +71,17 @@ export class BoidSimulation {
         );
     }
 
+    public getVelocities() {
+        return this.module.HEAPF32.subarray(
+            this.velocityPtr >> 2,
+            (this.velocityPtr >> 2) + this.positions.length
+        );
+    }
+
     public getNumBoids() {
         return this.numBoids;
+    }
+    public getColors() {
+        return this.colors;
     }
 } 

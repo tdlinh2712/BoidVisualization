@@ -16,8 +16,8 @@ const startWasm = async () => {
         init_boids,
         simulate,
     }
-    // new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.JS_BOIDS));
     new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.CPP_BOIDS));
+    // new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.CPP_BOIDS));
 
 }
 await startWasm();
