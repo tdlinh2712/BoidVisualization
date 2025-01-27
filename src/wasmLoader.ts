@@ -1,4 +1,4 @@
-import Module from '/public/test6.js';
+import Module from '/public/wasm.js';
 import sketch  from './canvas.ts';
 import p5 from 'p5';
 import { MODE } from './components/types.ts';
@@ -17,7 +17,7 @@ const startWasm = async () => {
         simulate,
     }
     // new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.JS_BOIDS));
-    new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.CPP_BOIDS));
+    new p5((p: p5) => sketch(p, exportedFunctions, module, MODE.JS_BOIDS));
 
 }
 await startWasm();

@@ -71,7 +71,7 @@ class QuadTree {
     }
 
     display(p: p5) {
-        p.stroke(150, 0, 150);
+        p.stroke(150, 200, 255, 150); // Changed to a light blue with lower opacity for an accent
         p.strokeWeight(1);
         p.noFill();
         const { boundary, subTrees } = this;

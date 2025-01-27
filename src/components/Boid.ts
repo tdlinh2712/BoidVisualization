@@ -8,12 +8,12 @@ class Boid {
     acceleration: p5.Vector;
     p: p5;
     color: Color;
-    constructor(p: p5, x: number, y: number , behaviourParams : BehaviourParams) {
+    constructor(p: p5, x: number, y: number, color? : Color) {
         this.p = p;
         this.position = p.createVector(x, y);
         this.velocity = p5.Vector.random2D().setMag(p.random(0.5, 2));
         this.acceleration = p.createVector();
-        this.color = {
+        this.color = color ? color : {
             r: Math.random() * 255,
             g: Math.random() * 255,
             b: Math.random() * 255,
