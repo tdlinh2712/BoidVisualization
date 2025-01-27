@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Color, FlockingWeights, MODE } from './components/types.ts'
+import { BehaviourParams, Color, FlockingWeights, MODE } from './components/types.ts'
 import { WASMFunctions } from './wasmTypes.ts';
 import { BoidSimulation } from './components/BoidSimulation.ts';
 import Boid from './components/Boid.ts'
@@ -8,8 +8,9 @@ import QuadTree from './components/QuadTree.ts';
 import Circle from './components/Circle.ts';
 
 const DIMENSIONS: number = 2;
-const population: number = 3000;
+const population: number = 300;
 let weight: FlockingWeights;
+let behaviourParams : BehaviourParams;
 const boids: Boid[] = [];
 
 const renderPositionArray = (displayBoidFunc, positions: Float32Array, velocities : Float32Array, colors: Color[]) => {
@@ -30,14 +31,14 @@ const simulateBoids = ( displayBoidFunc, boids: Boid[], quadTree : QuadTree) => 
   {
     quadTree.insert(boid);
   }
-
+  
   for (const boid of boids) {
-    const range = new Circle(boid.position.x, boid.position.y, boid.maxDistance);
+    const range = new Circle(boid.position.x, boid.position.y, behaviourParams.maxDistance);
     const neighbors = quadTree.query(range);
-    boid.flock(neighbors, weight);
+    boid.flock(neighbors, weight, behaviourParams);
   }
   for (const boid of boids) {
-    boid.update();
+    boid.update(behaviourParams);
     boid.checkbound();
     displayBoidFunc(boid.position, boid.velocity, boid.color);
   }
@@ -50,12 +51,23 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
   let simulation : BoidSimulation | null = null;
   p.setup = () => {
     p.createCanvas(window.innerWidth, window.innerHeight - 100);
-    for (let i = 0; i < population; i++) {
-      boids.push(new Boid(p, p.random(p.width), p.random(p.height)));
-    }
+
+    // init params
     weight = {
       alignment: 1, cohesion: 1, separation: 1
     }
+    behaviourParams = {
+      maxSpeed: 4,
+      maxDistance : 200,
+      maxEdgeDistance: 20,
+      maxForce : 1
+    }
+
+    for (let i = 0; i < population; i++) {
+      boids.push(new Boid(p, p.random(p.width), p.random(p.height), behaviourParams));
+    }
+    
+
     boundary = new Rectangle(p.width / 2, p.height / 2, p.width, p.height);
     quadTree = new QuadTree(boundary, 4);
     simulation = new BoidSimulation(population, Module, init_boids, p.width, p.height);
@@ -94,7 +106,7 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
     if (mode === MODE.CPP_BOIDS) {
       // Update simulation
       if (simulation) {
-        simulation.simulate(simulate, weight);
+        simulation.simulate(simulate, weight, behaviourParams);
         const positions = simulation.getPositions();
         renderPositionArray(displayBoidFunc, positions, simulation.getVelocities(), simulation.getColors());
       }
@@ -114,16 +126,37 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
   }
 }
 
-document.getElementById("alignment")?.addEventListener("input", (e) => {
+document.querySelectorAll('.slider').forEach(slider => {
+  slider.addEventListener('input', (e) => {
+      const valueSpan = document.getElementById(e.target.id + 'Value');
+      valueSpan.innerText = e.target.value;
+  });
+});
 
+
+document.getElementById("alignment")?.addEventListener("input", (e) => {
   weight.alignment = parseFloat((e.target as HTMLInputElement).value);
 })
 document.getElementById("cohesion")?.addEventListener("input", (e) => {
   weight.cohesion = parseFloat((e.target as HTMLInputElement).value);
+
 })
 document.getElementById("separation")?.addEventListener("input", (e) => {
   weight.separation = parseFloat((e.target as HTMLInputElement).value);
+
 })
 
+document.getElementById("maxSpeed").addEventListener("input", (e) => {
+  behaviourParams.maxSpeed = parseFloat((e.target as HTMLInputElement).value)
+});
+
+document.getElementById("maxDistance").addEventListener("input", (e) => {
+  behaviourParams.maxDistance = parseFloat((e.target as HTMLInputElement).value)
+
+});
+
+document.getElementById("maxForce").addEventListener("input", (e) => {
+  behaviourParams.maxForce = parseFloat((e.target as HTMLInputElement).value)
+});
 
 export default sketch;

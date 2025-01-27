@@ -151,7 +151,7 @@ button:hover {
     display: flex; /* Use flexbox for layout */
     justify-content: space-around; /* Space sliders evenly */
     align-items: center; /* Center items vertically */
-    margin: 20px; /* Margin around the container */
+    margin: 5px; /* Margin around the container */
 }
 
 /* Style for the slider divs */

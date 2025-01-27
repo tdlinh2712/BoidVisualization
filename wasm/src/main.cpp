@@ -47,23 +47,31 @@ extern "C" EMSCRIPTEN_KEEPALIVE float init_boids(int population, int width, int 
     return positions[xPos(0)] + positions[yPos(0)];
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void simulate(int population, float alignmentWeight, float cohesionWeight, float separationWeight, float* positions,  float* velocities) {
+extern "C" EMSCRIPTEN_KEEPALIVE void simulate(int population, float alignmentWeight, float cohesionWeight, float separationWeight, float maxSpeed, float maxDistance, float maxEdgeDistance, float maxForce, float* positions,  float* velocities) {
+        Parameters params{
+            .alignmentWeight = alignmentWeight,
+            .cohesionWeight = cohesionWeight,
+            .separationWeight = separationWeight,
+            .maxSpeed = maxSpeed,
+            .maxDistance = maxDistance,
+            .maxEdgeDistance = maxEdgeDistance,
+            .maxForce = maxForce
+        };
         quadTree.clear();
         for (int i = 0; i < population; i++) {
             quadTree.insert(boids[i]);
         }
         for (int i = 0; i < population; i++) {
-            const Circle range(boids[i].getX(), boids[i].getY(), boids[i].getMaxDistance());
+            const Circle range(boids[i].getX(), boids[i].getY(), maxDistance);
             const auto neighbors = quadTree.query(range);
-            boids[i].flock(neighbors, alignmentWeight, cohesionWeight, separationWeight);
+            boids[i].flock(neighbors, params);
         }
         for (int i = 0; i < population; i++) {
-            boids[i].update();
+            boids[i].update(params);
             boids[i].checkBounds();
         }
 
         write_pos(population, positions);
         write_velocities(population, velocities);
         // write new pos to array
-
-    }
+}

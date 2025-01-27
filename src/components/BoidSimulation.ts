@@ -1,4 +1,4 @@
-import { FlockingWeights } from "./types";
+import { BehaviourParams, FlockingWeights } from "./types";
 import { WASMFunctions } from '../wasmTypes.ts';
 
 export class BoidSimulation {
@@ -57,9 +57,10 @@ export class BoidSimulation {
         );
     }
 
-    public simulate(simulateFunc: Function, weight : FlockingWeights) {
+    public simulate(simulateFunc: Function, weight : FlockingWeights, behaviourParams : BehaviourParams) {
         const { alignment, cohesion, separation } = weight;
-        simulateFunc(this.numBoids, alignment, cohesion, separation, this.positionPtr, this.velocityPtr );
+        const { maxSpeed, maxDistance, maxEdgeDistance, maxForce } =  behaviourParams
+        simulateFunc(this.numBoids, alignment, cohesion, separation, maxSpeed, maxDistance, maxEdgeDistance, maxForce, this.positionPtr, this.velocityPtr );
         // not calling this so we save the memory coping from CPP to JS
         // this.updatePositionsFromWasm();
     }

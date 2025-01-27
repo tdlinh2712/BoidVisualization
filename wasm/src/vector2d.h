@@ -31,7 +31,7 @@ public:
 
     // Scalar division
     Vector2D operator/(double scalar) const {
-        if (scalar == 0) throw std::invalid_argument("Division by zero");
+        if (scalar == 0) throw std::invalid_argument("Division by zero, ");
         return Vector2D(x / scalar, y / scalar);
     }
 

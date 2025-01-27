@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,27 +12,54 @@
   <!-- <script type="module" crossorigin src="/test.js"></script> -->
 
 </head>
+
 <body>
   <!-- <script type="module" crossorigin="anonymous" src="./test5.js"></script> -->
   <script type="module" crossorigin src="/src/wasmLoader.ts"></script>
 
-<header class="logo">
-</header>
-<main id="app">
-  <div id="control-group" class="slider-container">
-    <div class="slider-div">
-      <p>Alignment</p>
-      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="alignment">
+  <header class="logo">
+  </header>
+  <main id="app">
+    <div id="control-group" class="slider-container">
+      <h2>Behavior Parameters</h2>
+      <div class="slider-div">
+        <label for="maxSpeed">Max Speed</label>
+        <input type="range" min="1.0" max="10.0" value="5." class="slider" step="0.1" id="maxSpeed">
+        <span id="maxSpeedValue">5.0</span>
+      </div>
+      <div class="slider-div">
+        <label for="maxDistance">Neighbor Radius</label>
+        <input type="range" min="0" max="100" value="1000" class="slider" step="10" id="maxDistance">
+        <span id="maxDistanceValue">1000</span>
+      </div>
+      <div class="slider-div">
+        <label for="maxForce">Max Force</label>
+        <input type="range" min="0.1" max="10.0" value="1." class="slider" step="0.1" id="maxForce">
+        <span id="maxForceValue">1.0</span>
+      </div>
     </div>
-    <div class="slider-div">
-      <p>Cohesion</p>
-      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="cohesion">
+    <div id="control-group" class="slider-container">
+      <h2>Weighting Factors</h2>
+      <div class="slider-div">
+        <label for="alignment">Alignment</label>
+        <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="alignment">
+        <span id="alignmentValue">1.0</span>
+      </div>
+      <div class="slider-div">
+        <label for="cohesion">Cohesion</label>
+        <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="cohesion">
+        <span id="cohesionValue">1.0</span>
+      </div>
+      <div class="slider-div">
+        <label for="separation">Separation</label>
+        <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="separation">
+        <span id="separationValue">1.0</span>
+      </div>
     </div>
-    <div class="slider-div">
-      <p>Separation</p>
-      <input type="range" min="0" max="3.0" value="1." class="slider" step="0.1" id="separation">
-    </div>
-  </div>
-</main>
+  </main>
+
+  <script>
+  </script>
 </body>
+
 </html>
