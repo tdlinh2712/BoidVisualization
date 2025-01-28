@@ -7,15 +7,23 @@ import Rectangle from './components/Rectangle.ts';
 import QuadTree from './components/QuadTree.ts';
 import Circle from './components/Circle.ts';
 
+// GLOBAL PARAMS
 const DIMENSIONS: number = 2;
+const MAX_POPULATION : number = 1000;
+
+
+let flockPopulation : number = 200;
 let population: number = 0;
 let weight: FlockingWeights;
 let behaviourParams: BehaviourParams;
 let shouldShowQuadTree: boolean = false;
 let shouldShowRadius: boolean = false;
+let shouldShowPredator: boolean = false;
+
 
 let flock_count : number = 0;
 const boids: Boid[] = [];
+const predatorBoids : Boid[] = [];
 
 const renderPositionArray = (displayBoidFunc, positions: Float32Array, velocities: Float32Array, colors: Color[]) => {
   for (let i = 0; i < positions.length / DIMENSIONS; i++) {
@@ -29,11 +37,7 @@ const renderPositionArray = (displayBoidFunc, positions: Float32Array, velocitie
 
 let lastClicked = 0;
 
-const checkFlock = (curBoid : Boid, other : Boid) => {
-  return curBoid.isSameFlock(other);
-}
-
-const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], quadTree: QuadTree) => {
+const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], predatorBoids : Boid[], quadTree: QuadTree) => {
 
   // simulate with quad tree
   // create a new qtree with current boids' location
@@ -42,36 +46,54 @@ const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], quadTree: QuadTree
     quadTree.insert(boid);
   }
 
-  for (let i = 0; i < boids.length; i++) {
-    const boid = boids[i];
-    const range = new Circle(boid.position.x, boid.position.y, behaviourParams.maxDistance);
-    const neighbors = quadTree.query(range, (other) => checkFlock(boid, other));
-    boid.flock(neighbors, weight, behaviourParams);
+  if (shouldShowPredator)
+  {
+    for (const boid of predatorBoids) {
+      quadTree.insert(boid);
+    }
   }
-  for (let i = 0; i < boids.length; i++) {
-    const boid = boids[i];
-    boid.update(behaviourParams);
-    boid.checkbound();
-    displayBoidFunc(boid.position, boid.velocity, boid.color);
-    // if it's the first boid, display the perception radius
+
+  const displayBoids = (boidArray : Boid[]) => {
+      for (let i = 0; i < boidArray.length; i++) {
+      const boid = boidArray[i];
+      const range = new Circle(boid.position.x, boid.position.y, behaviourParams.maxDistance);
+       const neighbors = quadTree.query(range)
+      boid.flock(neighbors, weight, behaviourParams);
+    }
+    for (let i = 0; i < boidArray.length; i++) {
+      const boid = boidArray[i];
+      boid.update(behaviourParams);
+      boid.checkbound();
+      displayBoidFunc(boid.position, boid.velocity, boid.color, boid.is_predator);
+    }
   }
+
+  displayBoids(boids);
+  if (shouldShowPredator)
+  {
+    displayBoids(predatorBoids);
+  }
+
+  // display perception radius for the first boid only
   if (shouldShowRadius && boids.length > 0)
   {
     const displayedBoid = boids[0];
     const range = new Circle(displayedBoid.position.x, displayedBoid.position.y, behaviourParams.maxDistance);
     const neighbors = quadTree.query(range);
-    
+
     // display one highlighted boid and highlight its neighbor boids (of the same flock) in red
     p.strokeWeight(3);
+
+    // Draw the arc for the perception area
     p.noFill();
     p.stroke(displayedBoid.color.r, displayedBoid.color.g, displayedBoid.color.b);
     p.circle(displayedBoid.position.x, displayedBoid.position.y, behaviourParams.maxDistance * 2);
     for (const neighbor of neighbors) {
-      if (neighbor === displayedBoid || !neighbor.isSameFlock(displayedBoid))
+      if (neighbor === displayedBoid || !neighbor.isSameFlock(displayedBoid.flock_id))
       {
         continue;
       }
-      displayBoidFunc(neighbor.position, neighbor.velocity, { r: 255, g: 0, b: 0 });
+      displayBoidFunc(neighbor.position, neighbor.velocity, { r: 255, g: 255, b: 0 });
     }
   }
   
@@ -96,22 +118,26 @@ const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], quadTree: QuadTree
     // add 100 new boids of same random color
     const flock_color = randomColor();
     flock_count++;
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < flockPopulation; i++) {
+      if ( boids.length === MAX_POPULATION)
+      {
+        break;
+      }
       const newBoid = new Boid(p, p.random(p.mouseX - newBoidRadius, p.mouseX + newBoidRadius), p.random(p.mouseY - newBoidRadius, p.mouseY + newBoidRadius), flock_count, flock_color);
       boids.push(newBoid);
       displayBoidFunc(newBoid.position, newBoid.velocity, newBoid.color)
       population++;
     }
   }
-
 }
 
 const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mode: MODE) => {
   let boundary = new Rectangle(p.width / 2, p.height / 2, p.width, p.height);
   let quadTree = new QuadTree(boundary, 4);
   let simulation: BoidSimulation | null = null;
+
   p.setup = () => {
-    p.createCanvas(window.innerWidth, window.innerHeight - 100);
+    p.createCanvas(window.innerWidth * 0.75, window.innerHeight * 0.75);
 
     // init params
     weight = {
@@ -120,8 +146,10 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
     behaviourParams = {
       maxSpeed: 4,
       maxDistance: 200,
-      maxEdgeDistance: 20,
-      maxForce: 1
+      perceptionAngle: Math.PI / 2,
+      maxEdgeDistance: p.height / 6,
+      maxForce: 1,
+      maxSpeedFromPredatorMult: 5
     }
 
     // choose a random color
@@ -131,38 +159,61 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
       boids.push(new Boid(p, p.random(p.width), p.random(p.height), flock_count, flock_color));
     }
 
-
+    flock_count++;
+    const predColor : Color = {
+      r: 255, g: 0, b: 0
+    } 
+    for (let i = 0; i < 2; i++) {
+      predatorBoids.push(new Boid(p, p.random(p.width), p.random(p.height), flock_count, predColor, true /* predator*/));
+    }
     boundary = new Rectangle(p.width / 2, p.height / 2, p.width, p.height);
     quadTree = new QuadTree(boundary, 4);
     simulation = new BoidSimulation(population, Module, init_boids, p.width, p.height);
   };
 
-  const displayBoidFunc = (position: p5.Vector, velocity: p5.Vector, color: Color) => {
+  const displayBoidFunc = (position: p5.Vector, velocity: p5.Vector, color: Color, is_predator = false) => {
     const angle = velocity.heading(); // Get the angle of the boid's velocity
-
+    const size_mult = is_predator ? 2 : 1;
     // Draw the body as an ellipse
     const bodyWidth = 5; // Width of the body
     const bodyHeight = 6; // Height of the body
     p.stroke(color.r, color.g, color.b);
-    p.strokeWeight(2);
+    p.strokeWeight(2 * size_mult);
     p.ellipse(position.x, position.y, bodyWidth, bodyHeight);
 
-    // Draw the tail as a line instead of a triangle
-    const tailLength = 10; // Length of the tail
-    const x1 = position.x - tailLength * Math.cos(angle);
-    const y1 = position.y - tailLength * Math.sin(angle);
+    // Draw the tail as a streamer shape
+    const tailLength = 12 * size_mult; // Length of the tail
+    const tailWidth = 4; // Width of the tail
+    const segments = 5 * size_mult; // Number of segments for the tail
 
-    // Set the stroke color with fading effect
-    p.strokeWeight(5)
-    p.stroke(color.r, color.g, color.b); // Set stroke with alpha
-    // Draw the tail line
-    p.line(position.x, position.y, x1, y1);
+    for (let i = 0; i < segments; i++) {
+      const segmentLength = tailLength / segments;
+      const currentLength = segmentLength * (i + 1);
+      const currentWidth = tailWidth * (1 - i / segments); // Tapering effect
+
+      const x1 = position.x - currentLength * Math.cos(angle);
+      const y1 = position.y - currentLength * Math.sin(angle);
+      const x2 = position.x - currentLength * Math.cos(angle + Math.PI / 12);
+      const y2 = position.y - currentLength * Math.sin(angle + Math.PI / 12);
+      const x3 = position.x - currentLength * Math.cos(angle - Math.PI / 12);
+      const y3 = position.y - currentLength * Math.sin(angle - Math.PI / 12);
+
+      
+      p.strokeWeight(currentWidth);
+      p.stroke(color.r, color.g, color.b); 
+      p.fill(color.r, color.g, color.b); // Fill color for the tail
+
+      // Draw the segments of the streamer shape
+      p.line(x1, y1, x2, y2); // Left side of the segment
+      p.line(x1, y1, x3, y3); // Right side of the segment
+    }
   }
 
   p.draw = () => {
-    p.background(20);
-    // p.strokeWeight(5);
-    // p.stroke(255, 255, 128);
+    p.background(0);
+    p.strokeWeight(2);
+    p.stroke(100); // pastel pink
+    p.rect(p.width / 2, p.height / 2, p.width , p.height);
 
     // Render boids
     if (mode === MODE.CPP_BOIDS) {
@@ -173,7 +224,7 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
         renderPositionArray(displayBoidFunc, positions, simulation.getVelocities(), simulation.getColors());
       }
     } else {
-      simulateBoids(p, displayBoidFunc, boids, quadTree);
+      simulateBoids(p, displayBoidFunc, boids, predatorBoids, quadTree);
     }
     // query quadtree
     // Draw UI
@@ -185,6 +236,14 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
     p.text(`Current framerate:${Math.round(p.frameRate())}`, 10, text_size * 2);
     p.text(`Mode : ${mode.toString()}`, 10, text_size * 3);
     // p.noLoop();
+
+    // display boundary line where the boids start to come back
+    p.strokeWeight(2);
+    p.stroke(255, 182, 193); // Pastel Pink
+    p.noFill();
+    p.rectMode(p.CENTER);
+    p.rect(p.width / 2, p.height / 2, p.width - behaviourParams.maxEdgeDistance * 2, p.height - behaviourParams.maxEdgeDistance * 2 );
+    
   }
 }
 
@@ -227,6 +286,14 @@ document.getElementById("showQuadtree").addEventListener("input", (e) => {
 
 document.getElementById("showRadius").addEventListener("input", (e) => {
   shouldShowRadius = !shouldShowRadius;
+});
+
+document.getElementById("showPredator").addEventListener("input", (e) => {
+  shouldShowPredator = !shouldShowPredator;
+});
+
+document.getElementById("flockPopulation").addEventListener("input", (e) => {
+  flockPopulation = parseInt((e.target as HTMLInputElement).value)
 });
 
 

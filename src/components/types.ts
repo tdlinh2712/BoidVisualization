@@ -24,8 +24,10 @@ export interface FlockingWeights {
 export interface BehaviourParams {
     maxSpeed : number;
     maxDistance : number;
+    perceptionAngle : number;
     maxEdgeDistance : number;
     maxForce : number;
+    maxSpeedFromPredatorMult : number;
 }
 
 export enum MODE {
