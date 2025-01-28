@@ -8,7 +8,8 @@ class Boid {
     acceleration: p5.Vector;
     p: p5;
     color: Color;
-    constructor(p: p5, x: number, y: number, color? : Color) {
+    flock_id: number;
+    constructor(p: p5, x: number, y: number, flock_id : number, color? : Color) {
         this.p = p;
         this.position = p.createVector(x, y);
         this.velocity = p5.Vector.random2D().setMag(p.random(0.5, 2));
@@ -18,6 +19,7 @@ class Boid {
             g: Math.random() * 255,
             b: Math.random() * 255,
         };
+        this.flock_id = flock_id;
     }
     checkbound() {
         if (this.position.x < 0) {
@@ -39,6 +41,11 @@ class Boid {
         let count = 0;
         for (const boid of neighbors)
         {
+            // only apply alignment to same flock
+            if (!this.isSameFlock(boid))
+            {
+                continue;
+            }
             const distance = p5.Vector.dist(this.position, boid.position);
             if (distance <= behaviourParams.maxDistance)
             {
@@ -62,6 +69,11 @@ class Boid {
         let count = 0;
         for (const boid of neighbors)
         {
+            // only apply cohesion to same flock
+            if (!this.isSameFlock(boid))
+            {
+                continue;
+            }
             const distance = p5.Vector.dist(this.position, boid.position);
             if (boid !== this && distance <= behaviourParams.maxDistance)
             {
@@ -179,6 +191,10 @@ class Boid {
         this.velocity.add(this.acceleration);
         this.velocity.limit(behaviourParams.maxSpeed);
         this.acceleration.mult(0);
+    }
+
+    isSameFlock( other : Boid ) {
+        return other.flock_id === this.flock_id;
     }
 }
 

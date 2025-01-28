@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { BehaviourParams, Color, FlockingWeights, MODE } from './components/types.ts'
+import { BehaviourParams, Color, FlockingWeights, MODE, randomColor } from './components/types.ts'
 import { WASMFunctions } from './wasmTypes.ts';
 import { BoidSimulation } from './components/BoidSimulation.ts';
 import Boid from './components/Boid.ts'
@@ -8,9 +8,13 @@ import QuadTree from './components/QuadTree.ts';
 import Circle from './components/Circle.ts';
 
 const DIMENSIONS: number = 2;
-let population: number = 10;
+let population: number = 0;
 let weight: FlockingWeights;
 let behaviourParams: BehaviourParams;
+let shouldShowQuadTree: boolean = false;
+let shouldShowRadius: boolean = false;
+
+let flock_count : number = 0;
 const boids: Boid[] = [];
 
 const renderPositionArray = (displayBoidFunc, positions: Float32Array, velocities: Float32Array, colors: Color[]) => {
@@ -25,7 +29,12 @@ const renderPositionArray = (displayBoidFunc, positions: Float32Array, velocitie
 
 let lastClicked = 0;
 
+const checkFlock = (curBoid : Boid, other : Boid) => {
+  return curBoid.isSameFlock(other);
+}
+
 const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], quadTree: QuadTree) => {
+
   // simulate with quad tree
   // create a new qtree with current boids' location
   quadTree.clear();
@@ -33,39 +42,62 @@ const simulateBoids = (p: p5, displayBoidFunc, boids: Boid[], quadTree: QuadTree
     quadTree.insert(boid);
   }
 
-  for (const boid of boids) {
+  for (let i = 0; i < boids.length; i++) {
+    const boid = boids[i];
     const range = new Circle(boid.position.x, boid.position.y, behaviourParams.maxDistance);
-    const neighbors = quadTree.query(range);
+    const neighbors = quadTree.query(range, (other) => checkFlock(boid, other));
     boid.flock(neighbors, weight, behaviourParams);
   }
-  for (const boid of boids) {
+  for (let i = 0; i < boids.length; i++) {
+    const boid = boids[i];
     boid.update(behaviourParams);
     boid.checkbound();
     displayBoidFunc(boid.position, boid.velocity, boid.color);
+    // if it's the first boid, display the perception radius
   }
-  quadTree.display(p);
+  if (shouldShowRadius && boids.length > 0)
+  {
+    const displayedBoid = boids[0];
+    const range = new Circle(displayedBoid.position.x, displayedBoid.position.y, behaviourParams.maxDistance);
+    const neighbors = quadTree.query(range);
+    
+    // display one highlighted boid and highlight its neighbor boids (of the same flock) in red
+    p.strokeWeight(3);
+    p.noFill();
+    p.stroke(displayedBoid.color.r, displayedBoid.color.g, displayedBoid.color.b);
+    p.circle(displayedBoid.position.x, displayedBoid.position.y, behaviourParams.maxDistance * 2);
+    for (const neighbor of neighbors) {
+      if (neighbor === displayedBoid || !neighbor.isSameFlock(displayedBoid))
+      {
+        continue;
+      }
+      displayBoidFunc(neighbor.position, neighbor.velocity, { r: 255, g: 0, b: 0 });
+    }
+  }
+  
+
+  if (shouldShowQuadTree) {
+    quadTree.display(p);
+  }
+
   if (p.mouseIsPressed) {
     if (p.mouseX < 0 || p.mouseY < 0) {
       return;
     }
     const cur_time = Date.now();
-    const TIMEOUT_SECONDS = 3;
+    const TIMEOUT_SECONDS = 1;
     if (cur_time - lastClicked < TIMEOUT_SECONDS * 1000) {
       return;
     }
     lastClicked = cur_time;
-    console.log(p.mouseX, p.mouseY)
 
     const newBoidRadius = 100;
 
-    // add 5 new boids of same random color
-    const color: Color = {
-      r: Math.random() * 255,
-      g: Math.random() * 255,
-      b: Math.random() * 255,
-    };
-    for (let i = 0; i < 100; i++) {
-      const newBoid = new Boid(p, p.random(p.mouseX - newBoidRadius, p.mouseX + newBoidRadius), p.random(p.mouseY - newBoidRadius, p.mouseY + newBoidRadius), color);
+    // add 100 new boids of same random color
+    const flock_color = randomColor();
+    flock_count++;
+    for (let i = 0; i < 200; i++) {
+      const newBoid = new Boid(p, p.random(p.mouseX - newBoidRadius, p.mouseX + newBoidRadius), p.random(p.mouseY - newBoidRadius, p.mouseY + newBoidRadius), flock_count, flock_color);
       boids.push(newBoid);
       displayBoidFunc(newBoid.position, newBoid.velocity, newBoid.color)
       population++;
@@ -92,8 +124,11 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
       maxForce: 1
     }
 
+    // choose a random color
+    const flock_color = randomColor();
+    flock_count++;
     for (let i = 0; i < population; i++) {
-      boids.push(new Boid(p, p.random(p.width), p.random(p.height)));
+      boids.push(new Boid(p, p.random(p.width), p.random(p.height), flock_count, flock_color));
     }
 
 
@@ -119,7 +154,7 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
 
     // Set the stroke color with fading effect
     p.strokeWeight(5)
-    p.stroke(color.r, color.g, color.b, 150); // Set stroke with alpha
+    p.stroke(color.r, color.g, color.b); // Set stroke with alpha
     // Draw the tail line
     p.line(position.x, position.y, x1, y1);
   }
@@ -185,5 +220,15 @@ document.getElementById("maxDistance").addEventListener("input", (e) => {
 document.getElementById("maxForce").addEventListener("input", (e) => {
   behaviourParams.maxForce = parseFloat((e.target as HTMLInputElement).value)
 });
+
+document.getElementById("showQuadtree").addEventListener("input", (e) => {
+  shouldShowQuadTree = !shouldShowQuadTree;
+});
+
+document.getElementById("showRadius").addEventListener("input", (e) => {
+  shouldShowRadius = !shouldShowRadius;
+});
+
+
 
 export default sketch;

@@ -6,6 +6,15 @@ export interface Color {
     b: number;
 };
 
+export const randomColor = () : Color => {
+    return {
+        r: Math.random() * 255,
+        g: Math.random() * 255,
+        b: Math.random() * 255,
+      };
+};
+
+
 export interface FlockingWeights {
     alignment: number;
     cohesion: number;
