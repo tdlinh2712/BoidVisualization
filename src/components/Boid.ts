@@ -21,16 +21,16 @@ class Boid {
     }
     checkbound() {
         if (this.position.x < 0) {
-            this.position.x = 0;
-        }
-        else if (this.position.x > this.p.width) {
             this.position.x = this.p.width;
         }
+        else if (this.position.x > this.p.width) {
+            this.position.x = 0;
+        }
         if (this.position.y < 0) {
-            this.position.y = 0;
+            this.position.y = this.p.height;
         }
         else if (this.position.y > this.p.height) {
-            this.position.y = this.p.height;
+            this.position.y = 0;
         }
     }
 
@@ -183,8 +183,9 @@ class Boid {
             }
             this.acceleration.add(separation);
         }
-        const edge_avoidance = this.avoid_edges(behaviourParams);
-        this.acceleration.add(edge_avoidance);
+        const avg_weight = (weight.alignment + weight.cohesion + weight.separation)/3;
+        const edge_avoidance = this.avoid_edges(behaviourParams).mult(avg_weight);
+        this.acceleration.add(edge_avoidance).mult();
     }
 
     static filterBoidsWithinPerception(mainBoid: Boid, neighbors: Boid[], behaviourParams: BehaviourParams) {

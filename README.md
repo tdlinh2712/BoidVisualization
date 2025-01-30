@@ -11,6 +11,8 @@ A real-time flocking simulation implemented in both JavaScript and WebAssembly, 
 - Predator-prey behavior
 - Visual debugging tools (quadtree visualization, perception radius)
 
+![Boids Simulation Screenshot](assets/demo.png)
+
 ## Getting Started
 
 ### Prerequisites

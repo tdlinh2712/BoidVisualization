@@ -172,41 +172,10 @@ const sketch = (p: p5, { init_boids, simulate }: WASMFunctions, Module: any, mod
   };
 
   const displayBoidFunc = (position: p5.Vector, velocity: p5.Vector, color: Color, is_predator = false) => {
-    const angle = velocity.heading(); // Get the angle of the boid's velocity
-    const size_mult = is_predator ? 2 : 1;
-    // Draw the body as an ellipse
-    const bodyWidth = 5; // Width of the body
-    const bodyHeight = 6; // Height of the body
+    const size_mult = is_predator ? 20 : 10;
+    p.strokeWeight(size_mult);
     p.stroke(color.r, color.g, color.b);
-    p.strokeWeight(2 * size_mult);
-    p.ellipse(position.x, position.y, bodyWidth, bodyHeight);
-
-    // Draw the tail as a streamer shape
-    const tailLength = 12 * size_mult; // Length of the tail
-    const tailWidth = 4; // Width of the tail
-    const segments = 5 * size_mult; // Number of segments for the tail
-
-    for (let i = 0; i < segments; i++) {
-      const segmentLength = tailLength / segments;
-      const currentLength = segmentLength * (i + 1);
-      const currentWidth = tailWidth * (1 - i / segments); // Tapering effect
-
-      const x1 = position.x - currentLength * Math.cos(angle);
-      const y1 = position.y - currentLength * Math.sin(angle);
-      const x2 = position.x - currentLength * Math.cos(angle + Math.PI / 12);
-      const y2 = position.y - currentLength * Math.sin(angle + Math.PI / 12);
-      const x3 = position.x - currentLength * Math.cos(angle - Math.PI / 12);
-      const y3 = position.y - currentLength * Math.sin(angle - Math.PI / 12);
-
-      
-      p.strokeWeight(currentWidth);
-      p.stroke(color.r, color.g, color.b); 
-      p.fill(color.r, color.g, color.b); // Fill color for the tail
-
-      // Draw the segments of the streamer shape
-      p.line(x1, y1, x2, y2); // Left side of the segment
-      p.line(x1, y1, x3, y3); // Right side of the segment
-    }
+    p.point(position.x, position.y);
   }
 
   p.draw = () => {
